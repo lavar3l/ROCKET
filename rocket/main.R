@@ -3,7 +3,7 @@ library(stringr)
 source('equalizers.R')
 source('parse_files.R')
 source('utils.R')
-source('rocket_iter.R')
+source('rocket_optimised.R')
 
 # load files
 load.files <- function(path) {

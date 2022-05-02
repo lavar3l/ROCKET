@@ -1,5 +1,2 @@
 # created by virtualenv automatically
-pyvenv.cfg
-Scripts
-Lib
-Include
+venv
