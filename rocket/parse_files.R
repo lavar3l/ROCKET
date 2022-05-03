@@ -1,11 +1,5 @@
 library("RWeka")
 
-# make sure that Java is in system PATH
-if (!"Java" %in% Sys.getenv("PATH")) {
-  print("Java not in path!")
-  print("add: C:\\Program Files\\Java\\jdk-18.0.1\\bin\\server to syspath")
-}
-
 pre.process.file.set <- function(filenames, equalizer) {
   # returns:
   # set: list of 2:
@@ -23,19 +17,18 @@ read.file <- function(filename) {
   raw_data <- read.arff(filename)
   classes <- raw_data[,length(raw_data)]
   raw_data <- raw_data[,1:(length(raw_data) - 1)]
-
-  # convert data to a list, so it can be a set of different lengths
-  # raw_data <- do.call(list, raw_data)
-  # raw_data <- trim.lengths(raw_data)
+  raw_data <- trim.lengths(raw_data)
 
   list(DATA = raw_data, CLASSES = classes)
 }
 
 trim.lengths <- function(data) {
-  length <- length(data)
+  length <- dim(data)[1]
+  row_l <- dim(data)[2]
+  lengths <- sapply(1:length, function(i) { generate.length(i, length, row_l) })
 
   for (i in 1:length) {
-    data[[i]] <- data[[i]][1:generate.length(i, length, length(data[[i]]))]
+    data[i,(lengths[i] + 1):row_l] <- NA
   }
 
   return(data)

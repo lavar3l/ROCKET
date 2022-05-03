@@ -3,9 +3,9 @@ library(geometry)
 # parallel computing
 library(foreach)
 library(doParallel)
-library(rlang)
 
 generate.lengths <- function(how_much) {
+  # sapply(1:how_much, function(index) { sample(c(11), 1) })
   sapply(1:how_much, function(index) { sample(c(7, 9, 11), 1) })
 }
 
@@ -13,6 +13,7 @@ generate.channel.indices <- function(how_much, num_columns, lengths) {
   sapply(1:how_much, function(index)
   {
     limit <- min(lengths[index], num_columns)
+    #return(5)
     return(floor(2^(runif(1,0, log2(limit + 1)))))
   }
   )
@@ -20,7 +21,7 @@ generate.channel.indices <- function(how_much, num_columns, lengths) {
 
 generate.kernels <- function(timepoints, num_kernels, num_columns, seed = NULL) {
   if (!is.null(seed))
-    set.seed(seed, kind = "Mersenne-Twister")
+    set.seed(seed)
 
   lengths <- generate.lengths(num_kernels)
   num_channel_indices <- generate.channel.indices(num_kernels, num_columns, lengths)
@@ -37,6 +38,7 @@ generate.kernels <- function(timepoints, num_kernels, num_columns, seed = NULL) 
     length_ <- lengths[i + 1]
     num_channel_indices_ <- num_channel_indices[i + 1]
     weights_ <- rnorm(num_channel_indices_ * length_,0, 1)
+    #weights_ <- rep(0.5, num_channel_indices_ * length_)
     b1 <- a1 + (num_channel_indices_ * length_)
     b2 <- a2 + num_channel_indices_
 
@@ -66,10 +68,15 @@ generate.kernels <- function(timepoints, num_kernels, num_columns, seed = NULL) 
     channel_indices[(a2 + 1):b2] <- sample(0:(num_columns - 1), num_channel_indices_, replace = F)
     biases[i + 1] <- runif(1, -1, 1)
 
-    dilation <- floor(2^runif(1, 0, log2((timepoints - 1) / (length_ - 1))))
+    # channel_indices[(a2 + 1):b2] <- rep(0, num_channel_indices_)
+    # biases[i + 1] <- 0
+
+    dilation <- floor(2^runif(1, 0, log2((timepoints - 1) / length_ - 1)))
+    # dilation <- 4
     dilations[i + 1] <- dilation
 
     padding <- if (sample(c(0,1),1) == 1) floor(((length_ - 1) * dilation) / 2) else 0
+    # padding <- 0
     paddings[i + 1] <- padding
 
     a1 <- b1
@@ -88,6 +95,7 @@ generate.kernels <- function(timepoints, num_kernels, num_columns, seed = NULL) 
 }
 
 apply.kernel.multivariate <- function(data, weights, length, bias, dilation, padding, num_channel_indices, channel_indices) {
+  num_columns <- dim(data)[1]
   num_timepoints <- dim(data)[2]
   output_length <- (num_timepoints + (2 * padding)) - ((length - 1) * dilation)
   ppv_ <- 0
@@ -120,12 +128,16 @@ apply.kernel.multivariate <- function(data, weights, length, bias, dilation, pad
   return(c(ppv_ / output_length, max_))
 }
 
-prepare_a1 <- function(a1) {
-  return(duplicate(a1, shallow = F))
+prepare_a1 <- function(kernels) {
+  a1 <- cumsum(c(0, kernels$num_channel_indices * kernels$lengths))
+  a1 <- lapply(1:(length(a1) - 1), function(idx) { return(c(a1[idx], a1[idx + 1])) })
+  return(a1)
 }
 
-prepare_a2 <- function(a2) {
-  return(duplicate(a2, shallow = F))
+prepare_a2 <- function(kernels) {
+  a2 <- cumsum(c(0, kernels$num_channel_indices))
+  a2 <- lapply(1:(length(a2) - 1), function(idx) { return(c(a2[idx], a2[idx + 1])) })
+  return(a2)
 }
 
 prepare_k <- function(length, dilation, padding, num_timepoints) {
@@ -133,9 +145,39 @@ prepare_k <- function(length, dilation, padding, num_timepoints) {
   return(-padding:(end-1))
 }
 
+prepare_index <- function(length, k, bias, dilation) {
+  ret <- rep(dilation, length - 1)
+  ret <- c(k, ret)
+  ret <- cumsum(ret)
+
+  return(ret)
+}
+
+prepare_weights <- function(weights, lengths, num_channel_indices) {
+  # weights_ <- weights[(a1 + 1):a2]
+  # R reshapes arrays differently to Python,
+  # switch colnums with rownums and then transpose
+  #weights_ <- t(array(weights, dim = c(lengths, num_channel_indices)))
+  matrix(weights, nrow = num_channel_indices, ncol = lengths, byrow = T)
+}
+
+
+prepare_res <- function(bias, output_length) {
+  return(function(v) {
+    v <- v[!is.na(v)]
+    v <- cumsum(c(bias, v))
+    ppv <- sum(sapply(v[!is.na(v)], function(x) { if (x > 0) {1} else {0} }))
+    max <- max(v)
+
+    return(c(ppv, max))
+  })
+}
+
 apply.kernels <- function(data, kernels) {
   num_instances <- dim(data)[1]
+  num_columns <- dim(data)[2]
   num_kernels <- length(kernels$lengths)
+  #X_ <- matrix(x, num_instances, num_kernels * 2)
   X_ <- array(0, dim = c(num_instances, num_kernels * 2))
 
   # parallel computing options
@@ -152,25 +194,35 @@ apply.kernels <- function(data, kernels) {
   a1 <- lapply(1:(length(a1) - 1), function(idx) { return(c(a1[idx], a1[idx + 1])) })
   a2 <- lapply(1:(length(a2) - 1), function(idx) { return(c(a2[idx], a2[idx + 1])) })
 
-  X_ <- foreach(row_ = rows, i = i, .combine = rbind, .export = "apply.kernel.multivariate") %:%
+  X_ <- foreach(row_ = rows, i = i, .combine = rbind) %:%
     foreach(field = row_,
             j = 1:num_kernels,
-            .combine = c) %dopar% {
-    weights_ <- matrix(kernels$weights[(a1[[j]][1] + 1):a1[[j]][2]], nrow = kernels$num_channel_indices[j], ncol = kernels$lengths[j], byrow = T)
-
-    res <- apply.kernel.multivariate(
-      data = data[(i + 1),,],
-      weights = weights_,
-      length = kernels$lengths[j],
-      bias = kernels$biases[j],
-      dilation = kernels$dilations[j],
-      padding = kernels$paddings[j],
-      num_channel_indices = kernels$num_channel_indices[j],
-      channel_indices = kernels$channel_indices[(a2[[j]][1] + 1):a2[[j]][2]]
-    )
-
-    return(res)
-  }
+            a1 = prepare_a1(kernels),
+            a2 = prepare_a2(kernels),
+            .export = c("kernels", "data", "apply.kernel.multivariate"),
+            .combine = c) %:%
+      foreach(
+        k = prepare_k(kernels$lengths[j], kernels$dilations[j], kernels$paddings[j], dim(data)[3]),
+        .combine = c
+      ) %:%
+        foreach(
+          output_length <- (dim(data)[3] + (2 * kernels$paddings[j])) - ((kernels$paddings[j] - 1) * kernels$dilations[j]),
+          index = prepare_index(kernels$lengths[j], k, kernels$biases[j], kernels$dilations[j]),
+          l = 0:(kernels$lengths[j] - 1),
+          .combine = c
+        ) %:%
+          foreach(
+            m = 0:(kernels$num_channel_indices[j] - 1),
+            .combine = c,
+            .final = prepare_res(bias = kernels$biases[j], output_length = output_length)
+          ) %dopar% {
+            weights_ <- prepare_weights(kernels$weights[(a1[1] + 1):a1[2]], kernels$lengths[j], kernels$num_channel_indices[j])
+            if (index > 0 && index < dim(data)[3]) {
+              return(weights_[(m + 1), (l + 1)] * data[i, (channel_indices[m + 1] + 1), (index + 1)])
+            } else {
+              return(NA)
+            }
+          }
 
   stopCluster(parallelCluster)
 
@@ -182,27 +234,25 @@ transform.data <- function(data) {
 
   # fill out the array
   for (i in seq_along(data)) {
-    for (j in seq_along(data[[i]]$DATA[1,])) {
-      ret[, i, j] <- data[[i]]$DATA[,j]
+    for (j in seq_along(data[[i]]$DATA)) {
+      ret[, i, j] <- data[[i]]$DATA[[j]]
     }
   }
 
   return(ret)
 }
 
-rocket <- function(raw_data, num_kernels = 50) {
+rocket_iter <- function(raw_data, num_kernels = 100) {
   data <- transform.data(raw_data)
   num_columns <- dim(data)[2]
   num_timepoints <- dim(data)[3]
-  set.seed(seed = as.numeric(Sys.Date()), kind = "Mersenne-Twister")
+
   kernels <- generate.kernels(num_timepoints, num_kernels, num_columns)
   # save(kernels, file = get.data.dump.filepath("temp.kernels.rdata"))
 
-  # load(get.data.dump.filepath("old/temp.kernels.rdata"))
+  # load(get.data.dump.filepath("temp.kernels.rdata"))
 
   transformed_data <- apply.kernels(data, kernels)
   # save(transformed_data, file = get.data.dump.filepath("temp.rocket.results_test.rdata"))
   # python_pickle.dump(transformed_data, get.data.dump.filepath("python_dump.rocket_test.results"))
-
-  return(transformed_data)
 }

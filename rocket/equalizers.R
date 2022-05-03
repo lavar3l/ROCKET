@@ -1,29 +1,47 @@
+calculate.reference.row.length <- function (data, fun) {
+  fun(sapply(data, function(d) {
+    fun(t(apply(d$DATA, MARGIN = 1, FUN = function(row) {
+      fun(length(row[!is.na(row)]))
+    })))
+  }))
+}
+
+trim.data <- function(data, reference_length) {
+  data <- lapply(data, function(file) {
+    file$DATA <- t(apply(file$DATA, MARGIN = 1, FUN = function(row) {
+      return(row[1:reference_length])
+    }))
+
+    return(list(DATA = file$DATA, CLASSES = file$CLASSES))
+  })
+
+  return(data)
+}
+
 padding <- function(data) {
-  reference_length <- max(sapply(data, function(d) { max(sapply(d$DATA, function(col) { max(length(col)) })) }))
-  lapply(data, function(d) { list(DATA = padding.inner(d$DATA, reference_length), CLASSES = d$CLASSES) })
+  reference_length <- calculate.reference.row.length(data, max)
+  data <- trim.data(data, reference_length)
+  data <- padding.inner(data)
+
+  return(data)
+}
+
+padding.inner <- function(data) {
+  data <- lapply(data, function(file) {
+    file$DATA <- t(apply(file$DATA, MARGIN = 1, FUN = function(row) {
+      row[is.na(row)] <- -1
+      return(row)
+    }))
+
+    return(list(DATA = file$DATA, CLASSES = file$CLASSES))
+  })
+
+  return(data)
 }
 
 cropping <- function(data) {
-  reference_length <- min(sapply(data, function(d) { min(sapply(d$DATA, function(col) { max(length(col)) })) }))
-  lapply(data, function(d) { list(DATA = cropping.inner(d$DATA, reference_length), CLASSES = d$CLASSES) })
-}
+  reference_length <- calculate.reference.row.length(data, min)
+  data <- trim.data(data, reference_length)
 
-padding.inner <- function(raw_data, reference_length) {
-  mx <- reference_length
-
-  for (i in seq_along(raw_data)) {
-    len <- length(raw_data[[i]])
-    if (len != mx)
-      raw_data[[i]] <- c(raw_data[[i]], rep(-1, mx - len))
-  }
-
-  return(as.data.frame(raw_data))
-}
-
-cropping.inner <- function(raw_data, reference_length) {
-  mn <- reference_length
-
-  for (i in seq_along(raw_data)) {
-    raw_data[[i]] <- raw_data[[i]][1:mn]
-  }
+  return(data)
 }
