@@ -85,5 +85,5 @@ process.pipeline <- function(file_set, equalizer, split, filename) {
 # --- main ---
 set.seed(seed = as.numeric(Sys.Date()), kind = "Mersenne-Twister")
 files <- load.files('../data')
-res <- process.files(files[1], cropping)
+res <- process.files(files[1], complement)
 
