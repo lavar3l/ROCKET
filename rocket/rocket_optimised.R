@@ -139,7 +139,7 @@ apply.kernels <- function(data, kernels) {
   X_ <- array(0, dim = c(num_instances, num_kernels * 2))
 
   # parallel computing options
-  parallelCluster <- makeCluster(4, type = "SOCK", methods = FALSE)
+  parallelCluster <- makeCluster(8, type = "SOCK", methods = FALSE)
   setDefaultCluster(parallelCluster)
   registerDoParallel(parallelCluster)
 

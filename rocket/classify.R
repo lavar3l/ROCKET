@@ -1,8 +1,8 @@
 library(reticulate)
 use_python("../python/venv/Scripts/python.exe")
 
-builtins <- import_builtins()
-main <- import_main()
+# builtins <- import_builtins()
+# main <- import_main()
 
 python_pickle.dump <- function(object, filename) {
   pickler <- import("pickle")
@@ -11,7 +11,7 @@ python_pickle.dump <- function(object, filename) {
   file$close()
 }
 
-python_check.accuracy <- function(train_data, train_classes, test_data, test_classes) {
+python_check.accuracy <- function(train_data, train_classes, test_data, test_classes, alpha = array(c(0.1, 1.0, 10.0))) {
   sklearn_model <- import("sklearn.linear_model")
   sklearn_metrics <- import("sklearn.metrics")
   sklearn_pipeline <- import("sklearn.pipeline")
@@ -22,7 +22,7 @@ python_check.accuracy <- function(train_data, train_classes, test_data, test_cla
 
   classifier <- sklearn_pipeline$make_pipeline(
     sklearn_preprocessing$StandardScaler(with_mean=F),
-    sklearn_model$RidgeClassifierCV()
+    sklearn_model$RidgeClassifierCV(alpha)
   )
   classifier$fit(train_data, train_classes)
 
