@@ -1,0 +1,2 @@
+"","filename","accuracy mean","accuracy max","accuracy min","accuracy median","alpha","kernels","test rocket time","test preprocessing time","train rocket time","train preprocessing time"
+"1","ArticularyWordRecognition","0.964666666666667","0.966666666666667","0.946666666666667","0.966666666666667","4","100","5.917","0.532","5.542","0.554"

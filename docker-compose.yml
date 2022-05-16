@@ -1,0 +1,13 @@
+version: '2.0'
+services:
+  #Docker
+  r.docker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: r.docker
+    restart: unless-stopped
+    volumes:
+      - ./:/home/rocket/
+    tty: true
+   
