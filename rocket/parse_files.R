@@ -1,4 +1,4 @@
-library("RWeka")
+library("foreign")
 
 pre.process.file.set <- function(filenames, equalizer) {
   # returns:

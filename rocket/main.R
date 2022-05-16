@@ -1,5 +1,7 @@
 library(stringr)
 
+setwd('./rocket')
+
 source('equalizers.R')
 source('parse_files.R')
 source('utils.R')
@@ -106,7 +108,7 @@ process.files <- function(files, extensive_data_dump = F, length = 10, kernels =
     list(EQ = cropping, NAME = "cropping"),
     list(EQ = meanify, NAME = "meanify"),
     list(EQ = extremify, NAME = "extremify"),
-    list(EQ = complement, NAME = "complement"),
+    list(EQ = complement, NAME = "complement")
     #list(EQ = forecaster, NAME = "forecaster")
   )
 
