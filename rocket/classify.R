@@ -1,5 +1,6 @@
 library(reticulate)
-use_python("../python/venv/Scripts/python.exe")
+use_python("/usr/bin/python3")
+#use_python("../python/venv/Scripts/python.exe")
 
 # builtins <- import_builtins()
 # main <- import_main()

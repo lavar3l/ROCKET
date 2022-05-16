@@ -1,6 +1,6 @@
 library(stringr)
 
-setwd('./rocket')
+#setwd('./rocket')
 
 source('equalizers.R')
 source('parse_files.R')

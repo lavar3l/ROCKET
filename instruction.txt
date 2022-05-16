@@ -1,0 +1,11 @@
+apt-get update -y && apt-get install python3 pip wget -y
+
+apt install software-properties-common dirmngr libcurl4-openssl-dev -y &&
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc &&
+add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" &&
+apt update -y &&
+apt install r-base -y &&
+pip3 install virtualenv
+
+
+install.packages(c('stringr', 'reticulate', 'forecast', 'foreign', 'geometry', 'foreach', 'doParallel', 'rlang'))

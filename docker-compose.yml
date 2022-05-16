@@ -2,9 +2,10 @@ version: '2.0'
 services:
   #Docker
   r.docker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+    image: razormeister/rocket
     container_name: r.docker
     restart: unless-stopped
     volumes:
