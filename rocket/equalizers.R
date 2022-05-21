@@ -17,21 +17,6 @@ trim.data <- function(data, reference_length) {
     return(list(DATA = file$DATA, CLASSES = file$CLASSES))
   })
 
-  # # parallel computing options
-  # parallelCluster <- makeCluster(8, type = "SOCK", methods = FALSE)
-  # setDefaultCluster(parallelCluster)
-  # registerDoParallel(parallelCluster)
-  #
-  # data <- foreach(file = data) %dopar% {
-  #   file$DATA <- t(apply(file$DATA, MARGIN = 1, FUN = function(row) {
-  #     return(row[1:reference_length])
-  #   }))
-  #
-  #   return(list(DATA = file$DATA, CLASSES = file$CLASSES))
-  # }
-  #
-  # stopCluster(parallelCluster)
-
   return(data)
 }
 
@@ -134,23 +119,6 @@ forecaster <- function(data) {
 }
 
 forecaster.internal <- function(data, reference_length) {
-  # data <- lapply(data, function(file) {
-  #   file$DATA <- t(apply(file$DATA, MARGIN = 1, FUN = function(row) {
-  #     row <- row[!is.na(row)]
-  #
-  #     diff <- abs(reference_length - length(row))
-  #     if (diff > 0) {
-  #       a <- auto.arima(row)
-  #       complement <- forecast(a, h = diff)
-  #       row <- c(row, complement$mean)
-  #     }
-  #
-  #     return(row)
-  #   }))
-  #
-  #   return(list(DATA = file$DATA, CLASSES = file$CLASSES))
-  # })
-
   # parallel computing options
   parallelCluster <- makeCluster(8, type = "SOCK", methods = FALSE)
   setDefaultCluster(parallelCluster)

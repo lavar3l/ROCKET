@@ -66,7 +66,7 @@ generate.kernels <- function(timepoints, num_kernels, num_columns, seed = NULL) 
     channel_indices[(a2 + 1):b2] <- sample(0:(num_columns - 1), num_channel_indices_, replace = F)
     biases[i + 1] <- runif(1, -1, 1)
 
-    dilation <- floor(2^runif(1, 0, log2((timepoints - 1) / (length_ - 1))))
+    dilation <- floor(2^runif(1, 0, abs(log2((timepoints - 1) / (length_ - 1)))))
     dilations[i + 1] <- dilation
 
     padding <- if (sample(c(0,1),1) == 1) floor(((length_ - 1) * dilation) / 2) else 0

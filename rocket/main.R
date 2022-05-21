@@ -104,11 +104,11 @@ extensive.processing <- function(file, equalizer, filename, equalizer_name, exte
 
 process.files <- function(files, extensive_data_dump = F, length = 10, kernels = 100) {
   equalizers <- list(
-    list(EQ = padding, NAME = "padding"),
-    list(EQ = cropping, NAME = "cropping"),
-    list(EQ = meanify, NAME = "meanify"),
-    list(EQ = extremify, NAME = "extremify"),
-    list(EQ = complement, NAME = "complement")
+    #list(EQ = padding, NAME = "padding"),
+    list(EQ = cropping, NAME = "cropping")
+    #list(EQ = meanify, NAME = "meanify"),
+    #list(EQ = extremify, NAME = "extremify"),
+    #list(EQ = complement, NAME = "complement")
     #list(EQ = forecaster, NAME = "forecaster")
   )
 
@@ -161,5 +161,7 @@ process.pipeline <- function(file_set, equalizer, split, filename, kernels = 100
 set.seed(seed = as.numeric(Sys.Date()), kind = "Mersenne-Twister")
 
 files <- load.files('../data')
-res <- process.files(files, T, 10, 100)
+
+# run showcase 10 times
+res <- process.files(files[16], T, 10, 100)
 print(res)
