@@ -24,8 +24,8 @@ load.files <- function(path) {
   dirs <- dirs[2:length(dirs)] # first dir is the main dir - omit
 
   files <- lapply(dirs, function(dir) {
-    train_files <- list.files(path = dir, recursive = T, all.files = T, pattern = "^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]*[0123456789]{1}_TRAIN.arff$", full.names = T)
-    test_files <- list.files(path = dir, recursive = T, all.files = T, pattern = "^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]*[0123456789]{1}_TEST.arff$", full.names = T)
+    train_files <- list.files(path = dir, recursive = T, all.files = T, pattern = "^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]*[0123456789]{1}_TRAIN.(csv|arff)$", full.names = T)
+    test_files <- list.files(path = dir, recursive = T, all.files = T, pattern = "^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]*[0123456789]{1}_TEST.(csv|arff)$", full.names = T)
 
     list(TRAIN = train_files, TEST = test_files)
   })

@@ -1,2 +1,2 @@
 "","filename","accuracy mean","accuracy max","accuracy min","accuracy median","alpha","kernels","test rocket time","test preprocessing time","train rocket time","train preprocessing time"
-"1","ArticularyWordRecognition","0.856333333333333","0.883333333333333","0.853333333333333","0.853333333333333","8","100","5.48","0.524000000000007","5.076","0.490999999999988"
+"1","Libras","0.555555555555556","0.555555555555556","0.555555555555556","0.555555555555556","7","100","24.8800000000001","0.259999999999309","17.2600000000002","0.0600000000004002"

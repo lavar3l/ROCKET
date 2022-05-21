@@ -14,7 +14,14 @@ pre.process.file.set <- function(filenames, equalizer) {
 
 read.file <- function(filename) {
   # separate results (classes) from data
-  raw_data <- read.arff(filename)
+  raw_data <- data.frame()
+
+  if (endsWith(filename, ".csv")) {
+    raw_data <- read.csv(filename)
+  } else {
+    raw_data <- read.arff(filename)
+  }
+
   classes <- raw_data[,length(raw_data)]
   raw_data <- raw_data[,1:(length(raw_data) - 1)]
   raw_data <- trim.lengths(raw_data)
