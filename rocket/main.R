@@ -163,5 +163,5 @@ set.seed(seed = as.numeric(Sys.Date()), kind = "Mersenne-Twister")
 files <- load.files('../data')
 
 # run showcase 10 times
-res <- process.files(files[16], T, 10, 100)
+res <- process.files(files, T, 10, 100)
 print(res)
